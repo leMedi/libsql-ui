@@ -41,7 +41,6 @@ All imports from `src/` should use `@/` alias (e.g., `import { cn } from '@/lib/
 - Client-side variables must be prefixed with `VITE_`.
 - **ALWAYS** use `env` from `@/env`. **NEVER** use `process.env` or `import.meta.env` directly.
 
-
 ## 3. TanStack Form (React)
 
 - **Package:** `@tanstack/react-form`

@@ -6,7 +6,6 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!**/routeTree.gen.ts"],
 		"ignoreUnknown": false
 	},
 	"formatter": {
@@ -23,9 +22,7 @@
 				"noExplicitAny": "off",
 				"noArrayIndexKey": "warn"
 			},
-			"a11y": {
-				"useSemanticElements": "off"
-			},
+			"a11y": {},
 			"style": {
 				"useNodejsImportProtocol": "off"
 			}
@@ -40,8 +37,7 @@
 	},
 	"css": {
 		"parser": {
-			"cssModules": true,
-			"tailwindDirectives": true
+			"cssModules": true
 		}
 	}
 }
