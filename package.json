@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"start:prod": "pnpm db:push && node .output/server/index.mjs",
+		"start:sqld": "sqld --http-listen-addr=127.0.0.1:8000 --db-path ./sqld-data --disable-metrics",
 		"dev": "vite dev --port 3000",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -35,6 +36,7 @@
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"date-fns": "^4.1.0",
+		"nanoid": "^5.1.6",
 		"next-themes": "^0.4.6",
 		"nitro": "latest",
 		"react": "^19.2.3",

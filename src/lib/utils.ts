@@ -2,7 +2,22 @@ import { env } from '@/env'
 import { createIsomorphicFn } from '@tanstack/react-start'
 import type { ClassValue } from 'clsx'
 import { clsx } from 'clsx'
+import { nanoid } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
+
+const ENTITY_PREFIXES = {
+	databaseServer: 'ds',
+	database: 'db',
+	token: 'tk',
+} as const
+
+type EntityType = keyof typeof ENTITY_PREFIXES
+
+export function genId(entity: EntityType): string {
+	const prefix = ENTITY_PREFIXES[entity]
+	const id = nanoid(12)
+	return `${prefix}_${id}`
+}
 
 export function cn(...inputs: Array<ClassValue>) {
 	return twMerge(clsx(inputs))

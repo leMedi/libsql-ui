@@ -22,6 +22,9 @@
 				"noExplicitAny": "off",
 				"noArrayIndexKey": "warn"
 			},
+			"correctness": {
+				"noChildrenProp": "off"
+			},
 			"a11y": {},
 			"style": {
 				"useNodejsImportProtocol": "off"

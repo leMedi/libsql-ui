@@ -1,3 +1,4 @@
+import { AddDatabaseServerDialogProvider } from '@/components/add-database-server-dialog-context'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -65,13 +66,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootComponent({ children }: { children: React.ReactNode }) {
 	return (
-		<SidebarProvider>
-			<AppSidebar />
-			<main className="w-full">
-				<Header />
-				<div>{children}</div>
-			</main>
-		</SidebarProvider>
+		<AddDatabaseServerDialogProvider>
+			<SidebarProvider>
+				<AppSidebar />
+				<main className="w-full">
+					<Header />
+					<div>{children}</div>
+				</main>
+			</SidebarProvider>
+		</AddDatabaseServerDialogProvider>
 	)
 }
 
