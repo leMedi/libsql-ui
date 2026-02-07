@@ -9,14 +9,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 const config = defineConfig({
 	plugins: [
 		devtools(),
-		nitro({
-			storage: {
-				main: {
-					driver: 'fs',
-					base: 'local-storage',
-				},
-			},
-		}),
+		nitro({}),
 		// this is the plugin that enables path aliases
 		viteTsConfigPaths({
 			projects: ['./tsconfig.json'],

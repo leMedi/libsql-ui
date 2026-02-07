@@ -6,10 +6,14 @@ export const env = createEnv({
 		NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 	},
 
-	server: {},
+	server: {
+		DATABASE_STORE_PATH: z.string().default('./data'),
+	},
 
 	clientPrefix: 'VITE_',
-	client: {},
+	client: {
+		VITE_SITE_URL: z.string().url().default('http://localhost:3000'),
+	},
 	// For Vite, this is import.meta.env.
 	// We use `runtimeEnv` to provide all variables at once.
 	runtimeEnv: typeof window !== 'undefined' ? import.meta.env : process.env,
