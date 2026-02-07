@@ -1,6 +1,6 @@
 import { ArrowUpDownIcon, DatabaseIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import * as React from 'react'
 
 import { useAddDatabaseServerDialog } from '@/components/add-database-server-dialog-context'
@@ -15,15 +15,26 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
-import { type DatabaseServer, getDatabaseServersFn } from '@/lib/server/database-servers'
+import type { DatabaseServer } from '@/lib/server/database-servers'
+import { databaseServerInfoQueryOptions, databaseServersQueryOptions } from '@/queries/database-server'
+
+function DatabaseStatusIndicator({ serverId }: { serverId: string }) {
+	const { data: serverInfo } = useQuery(databaseServerInfoQueryOptions(serverId))
+
+	const isAccessible = serverInfo?.isAccessible ?? false
+
+	return (
+		<div
+			className={`size-2 rounded-full ${isAccessible ? 'bg-green-500' : 'bg-red-500'}`}
+			title={isAccessible ? 'Server accessible' : 'Server not accessible'}
+		/>
+	)
+}
 
 export function DatabaseSwitcher() {
 	const { openDialog } = useAddDatabaseServerDialog()
 	const { isMobile } = useSidebar()
-	const { data: databases = [] } = useQuery({
-		queryKey: ['database-servers'],
-		queryFn: () => getDatabaseServersFn(),
-	})
+	const { data: databases = [] } = useSuspenseQuery(databaseServersQueryOptions())
 	const [activeDatabase, setActiveDatabase] = React.useState<DatabaseServer | null>(null)
 
 	React.useEffect(() => {
@@ -49,7 +60,10 @@ export function DatabaseSwitcher() {
 								<HugeiconsIcon icon={DatabaseIcon} className="size-4" />
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">{activeDatabase.name}</span>
+								<div className="flex items-center gap-2">
+									<span className="truncate font-medium">{activeDatabase.name}</span>
+									<DatabaseStatusIndicator serverId={activeDatabase.id} />
+								</div>
 								<span className="truncate text-xs">{activeDatabase.baseUrl}</span>
 							</div>
 							<HugeiconsIcon icon={ArrowUpDownIcon} className="ml-auto" />
@@ -68,7 +82,10 @@ export function DatabaseSwitcher() {
 									<div className="flex size-6 items-center justify-center rounded-md border">
 										<HugeiconsIcon icon={DatabaseIcon} className="size-3.5 shrink-0" />
 									</div>
-									{database.name}
+									<div className="flex flex-1 items-center gap-2">
+										{database.name}
+										<DatabaseStatusIndicator serverId={database.id} />
+									</div>
 									<DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
 								</DropdownMenuItem>
 							))}
