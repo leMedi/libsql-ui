@@ -3,7 +3,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"start:prod": "pnpm db:push && node .output/server/index.mjs",
+		"start:prod": "node .output/server/index.mjs",
 		"start:sqld": "./.bin/sqld --enable-http-console --enable-namespaces --http-listen-addr=127.0.0.1:8000 --admin-listen-addr=127.0.0.1:8001 --db-path ./sqld-data",
 		"dev": "vite dev --port 3000",
 		"build": "vite build",
