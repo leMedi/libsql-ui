@@ -1,6 +1,11 @@
 ## 1. Project Overview & Tech Stack
+ 
+LibSql UI is a tool to manage sqld servers
+- connect to sqld server
+- list workspaces
+- administrate workspace (add, delete ...)
+- check server health
 
-This is a **TanStack Start** application with React 19, TypeScript, and shadcn/ui components. TanStack Start is a full-stack React framework built on TanStack Router, providing file-based routing, SSR/SSG capabilities, and built-in devtools.
 
 ### Stack Components
 

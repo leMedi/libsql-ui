@@ -15,8 +15,8 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
-import type { DatabaseServer } from '@/lib/server/database-servers'
 import { databaseServerInfoQueryOptions, databaseServersQueryOptions } from '@/queries/database-server'
+import { useParams } from '@tanstack/react-router'
 
 function DatabaseStatusIndicator({ serverId }: { serverId: string }) {
 	const { data: serverInfo } = useQuery(databaseServerInfoQueryOptions(serverId))
@@ -35,13 +35,12 @@ export function DatabaseSwitcher() {
 	const { openDialog } = useAddDatabaseServerDialog()
 	const { isMobile } = useSidebar()
 	const { data: databases = [] } = useSuspenseQuery(databaseServersQueryOptions())
-	const [activeDatabase, setActiveDatabase] = React.useState<DatabaseServer | null>(null)
+	const { serverId } = useParams({ from: '/servers/$serverId' })
 
-	React.useEffect(() => {
-		if (databases.length > 0 && !activeDatabase) {
-			setActiveDatabase(databases[0])
-		}
-	}, [databases, activeDatabase])
+	const activeDatabase = React.useMemo(() => {
+		if (!serverId) return null
+		return databases.find((db) => db.id === serverId) || null
+	}, [databases, serverId])
 
 	if (!activeDatabase) {
 		return null
@@ -78,7 +77,13 @@ export function DatabaseSwitcher() {
 						<DropdownMenuGroup>
 							<DropdownMenuLabel className="text-muted-foreground text-xs">Databases</DropdownMenuLabel>
 							{databases.map((database, index) => (
-								<DropdownMenuItem key={database.name} onClick={() => setActiveDatabase(database)} className="gap-2 p-2">
+								<DropdownMenuItem
+									key={database.id}
+									className="gap-2 p-2"
+									onSelect={() => {
+										window.location.href = `/servers/${database.id}`
+									}}
+								>
 									<div className="flex size-6 items-center justify-center rounded-md border">
 										<HugeiconsIcon icon={DatabaseIcon} className="size-3.5 shrink-0" />
 									</div>

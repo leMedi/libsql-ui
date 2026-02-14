@@ -14,12 +14,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-	type AddDatabaseServer,
-	addDatabaseServerFn,
-	testDatabaseServerConnectionFn,
-	zAddDatabaseServer,
-} from '@/lib/server/database-servers'
+import { addDatabaseServerFn, testDatabaseServerConnectionFn } from '@/lib/server/database-servers'
+import { type AddDatabaseServer, zAddDatabaseServer } from '@/lib/server/database-servers-types'
 import { useRouter } from '@tanstack/react-router'
 
 export function AddDatabaseServerDialog({
@@ -42,7 +38,7 @@ export function AddDatabaseServerDialog({
 			form.reset()
 			setTestResult('idle')
 			router.navigate({
-				to: '/server/$serverId',
+				to: '/servers/$serverId',
 				params: { serverId: newServer.id },
 			})
 		},
