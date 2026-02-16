@@ -34,7 +34,7 @@ export function AddDatabaseServerDialogProvider({
 }
 
 export function useAddDatabaseServerDialog(): AddDatabaseServerDialogContextType {
-	const context = React.useContext(AddDatabaseServerDialogContext)
+	const context = React.use(AddDatabaseServerDialogContext)
 	if (context === undefined) {
 		throw new Error('useAddDatabaseServerDialog must be used within a AddDatabaseServerDialogProvider')
 	}

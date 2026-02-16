@@ -1,6 +1,4 @@
 import { AddDatabaseServerDialogProvider } from '@/components/add-database-server-dialog-context'
-import { AppSidebar } from '@/components/app-sidebar'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import type { QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
@@ -41,7 +39,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<head>
 				<HeadContent />
 			</head>
-			<body>
+			<body className="dark">
 				<RootComponent>{children}</RootComponent>
 				<TanStackDevtools
 					config={{
@@ -65,23 +63,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent({ children }: { children: React.ReactNode }) {
-	return (
-		<AddDatabaseServerDialogProvider>
-			<SidebarProvider>
-				<AppSidebar />
-				<main className="w-full">
-					<Header />
-					<div>{children}</div>
-				</main>
-			</SidebarProvider>
-		</AddDatabaseServerDialogProvider>
-	)
-}
-
-function Header() {
-	return (
-		<div className="h-12 border-b flex flex-col justify-center px-4">
-			<SidebarTrigger />
-		</div>
-	)
+	return <AddDatabaseServerDialogProvider>{children}</AddDatabaseServerDialogProvider>
 }

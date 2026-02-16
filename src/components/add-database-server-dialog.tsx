@@ -14,12 +14,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-	type AddDatabaseServer,
-	addDatabaseServerFn,
-	testDatabaseServerConnectionFn,
-	zAddDatabaseServer,
-} from '@/lib/server/database-servers'
+import { Textarea } from '@/components/ui/textarea'
+import { addDatabaseServerFn, testDatabaseServerConnectionFn } from '@/lib/server/database-servers'
+import { type AddDatabaseServer, zAddDatabaseServer } from '@/lib/server/database-servers-types'
 import { useRouter } from '@tanstack/react-router'
 
 export function AddDatabaseServerDialog({
@@ -42,7 +39,7 @@ export function AddDatabaseServerDialog({
 			form.reset()
 			setTestResult('idle')
 			router.navigate({
-				to: '/server/$serverId',
+				to: '/servers/$serverId',
 				params: { serverId: newServer.id },
 			})
 		},
@@ -60,7 +57,12 @@ export function AddDatabaseServerDialog({
 
 	const form = useForm({
 		defaultValues: {
-			authType: 'none' as 'none' | 'bearer' | 'header',
+			adminUrl: '',
+			normalUrl: '',
+			adminToken: '',
+			normalAuthType: 'basic' as 'basic' | 'jwt',
+			normalAuthBasicToken: '',
+			normalAuthJwtPrivateKey: '',
 		} as AddDatabaseServer,
 		validators: {
 			onChange: zAddDatabaseServer,
@@ -72,7 +74,7 @@ export function AddDatabaseServerDialog({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[720px] w-full">
 				<DialogHeader>
 					<DialogTitle>Add Database Server</DialogTitle>
 					<DialogDescription>
@@ -108,17 +110,17 @@ export function AddDatabaseServerDialog({
 					/>
 
 					<form.Field
-						name="baseUrl"
+						name="adminUrl"
 						children={(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Base URL</Label>
+								<Label htmlFor={field.name}>Admin API URL</Label>
 								<Input
 									id={field.name}
 									name={field.name}
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
-									placeholder="http://localhost:8080"
+									placeholder="http://localhost:8001"
 								/>
 								{field.state.meta.errors?.length > 0 && (
 									<p className="text-destructive text-sm">{String(field.state.meta.errors[0]?.message)}</p>
@@ -128,21 +130,61 @@ export function AddDatabaseServerDialog({
 					/>
 
 					<form.Field
-						name="authType"
+						name="normalUrl"
 						children={(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Authentication</Label>
+								<Label htmlFor={field.name}>Normal API URL</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									placeholder="http://localhost:8000"
+								/>
+								{field.state.meta.errors?.length > 0 && (
+									<p className="text-destructive text-sm">{String(field.state.meta.errors[0]?.message)}</p>
+								)}
+							</div>
+						)}
+					/>
+
+					<form.Field
+						name="adminToken"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>Admin Token</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									type="password"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									placeholder="admin-token"
+								/>
+								{field.state.meta.errors?.length > 0 && (
+									<p className="text-destructive text-sm">{String(field.state.meta.errors[0]?.message)}</p>
+								)}
+							</div>
+						)}
+					/>
+
+					<form.Field
+						name="normalAuthType"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>Normal API Authentication</Label>
 								<Select
 									value={field.state.value}
-									onValueChange={(value) => field.handleChange(value as 'none' | 'bearer' | 'header')}
+									onValueChange={(value) => field.handleChange(value as 'basic' | 'jwt')}
 								>
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder="Select authentication type" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="none">None</SelectItem>
-										<SelectItem value="bearer">Bearer Token</SelectItem>
-										<SelectItem value="header">Custom Header</SelectItem>
+										<SelectItem value="basic">Basic</SelectItem>
+										<SelectItem value="jwt">JWT (Ed25519)</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -150,14 +192,14 @@ export function AddDatabaseServerDialog({
 					/>
 
 					<form.Subscribe
-						selector={(state) => state.values.authType}
+						selector={(state) => state.values.normalAuthType}
 						children={(authType) =>
-							authType === 'bearer' ? (
+							authType === 'basic' ? (
 								<form.Field
-									name="authToken"
+									name="normalAuthBasicToken"
 									children={(field) => (
 										<div className="space-y-2">
-											<Label htmlFor={field.name}>Bearer Token</Label>
+											<Label htmlFor={field.name}>Basic Auth Token</Label>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -165,47 +207,36 @@ export function AddDatabaseServerDialog({
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												placeholder="your-secret-token"
+												placeholder="base64(username:password)"
 											/>
+											{field.state.meta.errors?.length > 0 && (
+												<p className="text-destructive text-sm">{String(field.state.meta.errors[0]?.message)}</p>
+											)}
 										</div>
 									)}
 								/>
-							) : authType === 'header' ? (
-								<>
-									<form.Field
-										name="authHeaderName"
-										children={(field) => (
-											<div className="space-y-2">
-												<Label htmlFor={field.name}>Header Name</Label>
-												<Input
-													id={field.name}
-													name={field.name}
-													value={field.state.value}
-													onBlur={field.handleBlur}
-													onChange={(e) => field.handleChange(e.target.value)}
-													placeholder="X-Custom-Auth"
-												/>
-											</div>
-										)}
-									/>
-									<form.Field
-										name="authHeaderValue"
-										children={(field) => (
-											<div className="space-y-2">
-												<Label htmlFor={field.name}>Header Value</Label>
-												<Input
-													id={field.name}
-													name={field.name}
-													type="password"
-													value={field.state.value}
-													onBlur={field.handleBlur}
-													onChange={(e) => field.handleChange(e.target.value)}
-													placeholder="your-secret-value"
-												/>
-											</div>
-										)}
-									/>
-								</>
+							) : authType === 'jwt' ? (
+								<form.Field
+									name="normalAuthJwtPrivateKey"
+									children={(field) => (
+										<div className="space-y-2">
+											<Label htmlFor={field.name}>Ed25519 Private Key (PKCS#8 PEM)</Label>
+											<Textarea
+												id={field.name}
+												name={field.name}
+												className="font-mono break-all whitespace-pre-wrap"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												placeholder="-----BEGIN PRIVATE KEY-----"
+												rows={4}
+											/>
+											{field.state.meta.errors?.length > 0 && (
+												<p className="text-destructive text-sm">{String(field.state.meta.errors[0]?.message)}</p>
+											)}
+										</div>
+									)}
+								/>
 							) : null
 						}
 					/>

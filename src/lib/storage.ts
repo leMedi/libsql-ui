@@ -1,7 +1,7 @@
 import { env } from '@/env'
 import { createStorage } from 'unstorage'
 import fsDriver from 'unstorage/drivers/fs'
-import type { DatabaseServer } from './server/database-servers'
+import type { DatabaseServer } from './server/database-servers-types'
 
 const storagePath = env.DATABASE_STORE_PATH || './data'
 

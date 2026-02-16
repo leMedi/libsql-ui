@@ -1,54 +1,51 @@
-import { DatabaseServersStorage } from '@/lib/storage'
 import { genId } from '@/lib/utils'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { fetchWorkspacesList, generateNormalAuthHeaders } from '../sqld-api'
+import {
+	type DatabaseServer,
+	type DatabaseServerAdminAuth,
+	type DatabaseServerNormalAuth,
+	type ServerInfo,
+	zAddDatabaseServer,
+	zCreateWorkspace,
+	zDatabaseServer,
+} from './database-servers-types'
 
 const removeTrailingSlash = (url: string) => url.replace(/\/+$/, '')
-const generateAuthHeaders = (auth: DatabaseServerAuth): Record<string, string> => {
-	if (auth.type === 'bearer') {
-		return {
-			Authorization: `Bearer ${auth.token}`,
-		}
-	}
 
-	if (auth.type === 'header') {
-		return {
-			[auth.name]: auth.value,
-		}
-	}
-	return {}
+const normalizeUrl = (url: string) => removeTrailingSlash(url)
+
+const adminAuthInputsToDbAuth = (auth: {
+	token?: string
+}): DatabaseServerAdminAuth => {
+	return { type: 'basic', token: auth.token || '' }
 }
 
-const zDatabaseServerAuth = z.discriminatedUnion('type', [
-	z.object({ type: z.literal('none') }),
-	z.object({ type: z.literal('bearer'), token: z.string() }),
-	z.object({
-		type: z.literal('header'),
-		name: z.string(),
-		value: z.string(),
-	}),
-])
+const normalAuthInputsToDbAuth = (auth: {
+	type: 'basic' | 'jwt'
+	token?: string
+	privateKey?: string
+}): DatabaseServerNormalAuth => {
+	if (auth.type === 'basic') {
+		return { type: 'basic', token: auth.token || '' }
+	}
 
-export const zDatabaseServer = z.object({
-	id: z.string(),
-	name: z.string().min(1, 'Name is required'),
-	baseUrl: z.url(),
-	auth: zDatabaseServerAuth,
-	insecureTls: z.boolean().default(false),
-	createdAt: z.string(),
-})
-
-export type DatabaseServer = z.infer<typeof zDatabaseServer>
-export type DatabaseServerAuth = z.infer<typeof zDatabaseServerAuth>
+	return { type: 'jwt', privateKey: auth.privateKey || '' }
+}
 
 export const getDatabaseServersFn = createServerFn({ method: 'GET' }).handler(async () => {
+	const { DatabaseServersStorage } = await import('@/lib/storage')
 	const servers = await DatabaseServersStorage.all()
 	return servers ?? []
 })
 
-export const getDatabaseServerFn = createServerFn({ method: 'GET' })
+export const getDatabaseServerConnectionInfoFromStorageFn = createServerFn({
+	method: 'GET',
+})
 	.inputValidator(z.object({ id: z.string() }))
 	.handler(async ({ data }) => {
+		const { DatabaseServersStorage } = await import('@/lib/storage')
 		const servers = await DatabaseServersStorage.all()
 		const server = servers.find((s: DatabaseServer) => s.id === data.id)
 		if (!server) {
@@ -57,24 +54,10 @@ export const getDatabaseServerFn = createServerFn({ method: 'GET' })
 		return server
 	})
 
-export const zAddDatabaseServer = zDatabaseServer
-	.omit({
-		id: true,
-		createdAt: true,
-		auth: true,
-	})
-	.extend({
-		authType: z.enum(['none', 'bearer', 'header']),
-		authToken: z.string().default(''),
-		authHeaderName: z.string().default(''),
-		authHeaderValue: z.string().default(''),
-	})
-
-export type AddDatabaseServer = z.input<typeof zAddDatabaseServer>
-
 export const addDatabaseServerFn = createServerFn({ method: 'POST' })
 	.inputValidator(zAddDatabaseServer)
 	.handler(async ({ data }) => {
+		const { DatabaseServersStorage } = await import('@/lib/storage')
 		const servers = await DatabaseServersStorage.all()
 
 		const existingWithName = servers.find((s: DatabaseServer) => s.name === data.name)
@@ -82,22 +65,23 @@ export const addDatabaseServerFn = createServerFn({ method: 'POST' })
 			throw new Error(`Database server with name "${data.name}" already exists`)
 		}
 
-		const auth =
-			data.authType === 'none'
-				? { type: 'none' as const }
-				: data.authType === 'bearer'
-					? { type: 'bearer' as const, token: data.authToken || '' }
-					: {
-							type: 'header' as const,
-							name: data.authHeaderName || '',
-							value: data.authHeaderValue || '',
-						}
+		const adminAuth = adminAuthInputsToDbAuth({
+			token: data.adminToken,
+		})
+
+		const normalAuth = normalAuthInputsToDbAuth({
+			type: data.normalAuthType,
+			token: data.normalAuthBasicToken,
+			privateKey: data.normalAuthJwtPrivateKey,
+		})
 
 		const newServer = {
 			name: data.name,
-			baseUrl: data.baseUrl,
+			adminUrl: normalizeUrl(data.adminUrl),
+			normalUrl: normalizeUrl(data.normalUrl),
 			insecureTls: data.insecureTls,
-			auth,
+			adminAuth,
+			normalAuth,
 			id: genId('databaseServer'),
 			createdAt: new Date().toISOString(),
 		} satisfies DatabaseServer
@@ -112,30 +96,39 @@ export const testDatabaseServerConnectionFn = createServerFn({ method: 'POST' })
 	.inputValidator(zAddDatabaseServer)
 	.handler(async ({ data }) => {
 		try {
-			const baseUrl = removeTrailingSlash(data.baseUrl)
-			const response = await fetch(`${baseUrl}/health`, {
+			const adminUrl = normalizeUrl(data.adminUrl)
+			console.log('Testing connection to database server admin URL:', adminUrl, {
+				headers: {
+					...(await generateNormalAuthHeaders(
+						adminAuthInputsToDbAuth({
+							token: data.adminToken,
+						}),
+					)),
+				},
+			})
+
+			const response = await fetch(`${adminUrl}/health`, {
 				method: 'GET',
 				headers: {
-					...generateAuthHeaders({
-						type: data.authType,
-						token: data.authToken,
-						name: data.authHeaderName,
-						value: data.authHeaderValue,
-					}),
+					...(await generateNormalAuthHeaders(
+						adminAuthInputsToDbAuth({
+							token: data.adminToken,
+						}),
+					)),
 				},
 			})
 
 			return response.ok
-		} catch {
+		} catch (error) {
+			console.error('Error testing database server connection:', error)
 			return false
 		}
 	})
 
-const zDeleteDatabaseServer = zDatabaseServer.pick({ id: true })
-
 export const deleteDatabaseServerFn = createServerFn({ method: 'POST' })
-	.inputValidator(zDeleteDatabaseServer)
+	.inputValidator(zDatabaseServer.pick({ id: true }))
 	.handler(async ({ data }) => {
+		const { DatabaseServersStorage } = await import('@/lib/storage')
 		const servers = await DatabaseServersStorage.all()
 		const filtered = servers.filter((s: DatabaseServer) => s.id !== data.id)
 
@@ -147,69 +140,75 @@ export const deleteDatabaseServerFn = createServerFn({ method: 'POST' })
 		return { success: true }
 	})
 
-export interface ServerInfo {
-	version: string | null
-	gitCommit: string | null
-	buildDate: string | null
-	isAccessible: boolean
-	responseTimeMs: number
+const _SERVER_INFO_CACHE: Record<string, { date: Date; data: ServerInfo }> = {}
+const getSeverInfoCached = async (serverId: string): Promise<ServerInfo> => {
+	const { DatabaseServersStorage } = await import('@/lib/storage')
+	const servers = await DatabaseServersStorage.all()
+	const server = servers.find((s: DatabaseServer) => s.id === serverId)
+
+	if (!server) {
+		throw new Error('Database server not found')
+	}
+
+	try {
+		if (_SERVER_INFO_CACHE[serverId]) {
+			// TODO: check date is less than 15min old
+			return _SERVER_INFO_CACHE[serverId].data
+		}
+
+		const workspaces = await fetchWorkspacesList(server)
+
+		return {
+			isAccessible: true,
+			workspaces,
+		}
+	} catch {
+		return { isAccessible: false, workspaces: [] }
+	}
 }
 
 export const getServerInfoFn = createServerFn({ method: 'POST' })
 	.inputValidator(zDatabaseServer.pick({ id: true }))
-	.handler(async ({ data }): Promise<ServerInfo> => {
+	.handler(async ({ data }) => {
+		return getSeverInfoCached(data.id)
+	})
+
+export const createWorkspaceFn = createServerFn({ method: 'POST' })
+	.inputValidator(zCreateWorkspace)
+	.handler(async ({ data }): Promise<boolean> => {
+		const { DatabaseServersStorage } = await import('@/lib/storage')
 		const servers = await DatabaseServersStorage.all()
-		const server = servers.find((s: DatabaseServer) => s.id === data.id)
+		const server = servers.find((s) => s.id === data.serverId)
 
 		if (!server) {
 			throw new Error('Database server not found')
 		}
 
-		const headers: Record<string, string> = {
-			Accept: 'text/plain',
-			...generateAuthHeaders(server.auth),
-		}
-
-		const baseUrl = removeTrailingSlash(server.baseUrl)
-		const startTime = Date.now()
-
 		try {
-			const response = await fetch(`${baseUrl}/version`, {
-				method: 'GET',
-				headers,
+			const response = await fetch(`${server.adminUrl}/v1/namespaces/${encodeURIComponent(data.name)}/create`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					...(await generateNormalAuthHeaders(server.adminAuth)),
+				},
+				body: JSON.stringify({}),
 			})
 
-			const responseTimeMs = Date.now() - startTime
+			if (response.status === 409) {
+				throw new Error('Database already exists')
+			}
 
 			if (!response.ok) {
-				return {
-					version: null,
-					gitCommit: null,
-					buildDate: null,
-					isAccessible: false,
-					responseTimeMs,
-				}
+				throw new Error(`Failed to create workspace: ${response.status} ${response.statusText}`)
 			}
 
-			const versionText = await response.text()
-
-			// Parse version string like: "sqld 0.21.9 (67f3ea5d 2023-10-26)"
-			const versionMatch = versionText.match(/sqld\s+([\d.]+)\s+\(([a-f0-9]+)\s+(\d{4}-\d{2}-\d{2})\)/)
-
-			return {
-				version: (versionMatch?.[1] ?? versionText.trim()) || null,
-				gitCommit: versionMatch?.[2] ?? null,
-				buildDate: versionMatch?.[3] ?? null,
-				isAccessible: true,
-				responseTimeMs,
+			delete _SERVER_INFO_CACHE[data.serverId]
+			return true
+		} catch (error) {
+			if (error instanceof Error) {
+				throw error
 			}
-		} catch {
-			return {
-				version: null,
-				gitCommit: null,
-				buildDate: null,
-				isAccessible: false,
-				responseTimeMs: Date.now() - startTime,
-			}
+			throw new Error('Failed to create workspace on server')
 		}
 	})

@@ -7,8 +7,6 @@ import { twMerge } from 'tailwind-merge'
 
 const ENTITY_PREFIXES = {
 	databaseServer: 'ds',
-	database: 'db',
-	token: 'tk',
 } as const
 
 type EntityType = keyof typeof ENTITY_PREFIXES
