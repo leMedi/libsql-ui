@@ -20,7 +20,6 @@ import { createWorkspaceFn } from '@/lib/server/database-servers'
 import { zCreateWorkspace } from '@/lib/server/database-servers-types'
 import type z from 'zod'
 
-
 type CreateWorkspace = z.infer<typeof zCreateWorkspace>
 export function CreateDatabaseDialog({ serverId }: { serverId: string }) {
 	const [open, setOpen] = useState(false)

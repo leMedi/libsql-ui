@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"start:prod": "node .output/server/index.mjs",
-		"start:sqld": "./.bin/sqld --enable-http-console --enable-namespaces --http-listen-addr=127.0.0.1:8000 --admin-listen-addr=127.0.0.1:8001 --db-path ./sqld-data",
+		"start:sqld": "./.bin/sqld --enable-http-console --enable-namespaces --http-listen-addr=127.0.0.1:8000 --admin-listen-addr=127.0.0.1:8001 --admin-auth-key secret --auth-jwt-key-file ./.bin/sqld_ed25519.pub --db-path ./sqld-data",
 		"dev": "vite dev --port 3000",
 		"build": "vite build",
 		"preview": "vite preview",

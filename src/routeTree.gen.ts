@@ -8,158 +8,146 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
 import { Route as SplatRouteImport } from './routes/$'
+import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ServersServerIdRouteRouteImport } from './routes/servers/$serverId/route'
-import { Route as ServersServerIdIndexRouteImport } from './routes/servers/$serverId/index'
 import { Route as ServersServerIdDatabasesDatabaseIdRouteImport } from './routes/servers/$serverId/databases.$databaseId'
+import { Route as ServersServerIdIndexRouteImport } from './routes/servers/$serverId/index'
+import { Route as ServersServerIdRouteRouteImport } from './routes/servers/$serverId/route'
 
 const SplatRoute = SplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => rootRouteImport,
+	id: '/$',
+	path: '/$',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
+	id: '/',
+	path: '/',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const ServersServerIdRouteRoute = ServersServerIdRouteRouteImport.update({
-  id: '/servers/$serverId',
-  path: '/servers/$serverId',
-  getParentRoute: () => rootRouteImport,
+	id: '/servers/$serverId',
+	path: '/servers/$serverId',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const ServersServerIdIndexRoute = ServersServerIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ServersServerIdRouteRoute,
+	id: '/',
+	path: '/',
+	getParentRoute: () => ServersServerIdRouteRoute,
 } as any)
-const ServersServerIdDatabasesDatabaseIdRoute =
-  ServersServerIdDatabasesDatabaseIdRouteImport.update({
-    id: '/databases/$databaseId',
-    path: '/databases/$databaseId',
-    getParentRoute: () => ServersServerIdRouteRoute,
-  } as any)
+const ServersServerIdDatabasesDatabaseIdRoute = ServersServerIdDatabasesDatabaseIdRouteImport.update({
+	id: '/databases/$databaseId',
+	path: '/databases/$databaseId',
+	getParentRoute: () => ServersServerIdRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/servers/$serverId': typeof ServersServerIdRouteRouteWithChildren
-  '/servers/$serverId/': typeof ServersServerIdIndexRoute
-  '/servers/$serverId/databases/$databaseId': typeof ServersServerIdDatabasesDatabaseIdRoute
+	'/': typeof IndexRoute
+	'/$': typeof SplatRoute
+	'/servers/$serverId': typeof ServersServerIdRouteRouteWithChildren
+	'/servers/$serverId/': typeof ServersServerIdIndexRoute
+	'/servers/$serverId/databases/$databaseId': typeof ServersServerIdDatabasesDatabaseIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/servers/$serverId': typeof ServersServerIdIndexRoute
-  '/servers/$serverId/databases/$databaseId': typeof ServersServerIdDatabasesDatabaseIdRoute
+	'/': typeof IndexRoute
+	'/$': typeof SplatRoute
+	'/servers/$serverId': typeof ServersServerIdIndexRoute
+	'/servers/$serverId/databases/$databaseId': typeof ServersServerIdDatabasesDatabaseIdRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/servers/$serverId': typeof ServersServerIdRouteRouteWithChildren
-  '/servers/$serverId/': typeof ServersServerIdIndexRoute
-  '/servers/$serverId/databases/$databaseId': typeof ServersServerIdDatabasesDatabaseIdRoute
+	__root__: typeof rootRouteImport
+	'/': typeof IndexRoute
+	'/$': typeof SplatRoute
+	'/servers/$serverId': typeof ServersServerIdRouteRouteWithChildren
+	'/servers/$serverId/': typeof ServersServerIdIndexRoute
+	'/servers/$serverId/databases/$databaseId': typeof ServersServerIdDatabasesDatabaseIdRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/$'
-    | '/servers/$serverId'
-    | '/servers/$serverId/'
-    | '/servers/$serverId/databases/$databaseId'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/$'
-    | '/servers/$serverId'
-    | '/servers/$serverId/databases/$databaseId'
-  id:
-    | '__root__'
-    | '/'
-    | '/$'
-    | '/servers/$serverId'
-    | '/servers/$serverId/'
-    | '/servers/$serverId/databases/$databaseId'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath
+	fullPaths: '/' | '/$' | '/servers/$serverId' | '/servers/$serverId/' | '/servers/$serverId/databases/$databaseId'
+	fileRoutesByTo: FileRoutesByTo
+	to: '/' | '/$' | '/servers/$serverId' | '/servers/$serverId/databases/$databaseId'
+	id:
+		| '__root__'
+		| '/'
+		| '/$'
+		| '/servers/$serverId'
+		| '/servers/$serverId/'
+		| '/servers/$serverId/databases/$databaseId'
+	fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SplatRoute: typeof SplatRoute
-  ServersServerIdRouteRoute: typeof ServersServerIdRouteRouteWithChildren
+	IndexRoute: typeof IndexRoute
+	SplatRoute: typeof SplatRoute
+	ServersServerIdRouteRoute: typeof ServersServerIdRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/$': {
-      id: '/$'
-      path: '/$'
-      fullPath: '/$'
-      preLoaderRoute: typeof SplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/servers/$serverId': {
-      id: '/servers/$serverId'
-      path: '/servers/$serverId'
-      fullPath: '/servers/$serverId'
-      preLoaderRoute: typeof ServersServerIdRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/servers/$serverId/': {
-      id: '/servers/$serverId/'
-      path: '/'
-      fullPath: '/servers/$serverId/'
-      preLoaderRoute: typeof ServersServerIdIndexRouteImport
-      parentRoute: typeof ServersServerIdRouteRoute
-    }
-    '/servers/$serverId/databases/$databaseId': {
-      id: '/servers/$serverId/databases/$databaseId'
-      path: '/databases/$databaseId'
-      fullPath: '/servers/$serverId/databases/$databaseId'
-      preLoaderRoute: typeof ServersServerIdDatabasesDatabaseIdRouteImport
-      parentRoute: typeof ServersServerIdRouteRoute
-    }
-  }
+	interface FileRoutesByPath {
+		'/$': {
+			id: '/$'
+			path: '/$'
+			fullPath: '/$'
+			preLoaderRoute: typeof SplatRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/': {
+			id: '/'
+			path: '/'
+			fullPath: '/'
+			preLoaderRoute: typeof IndexRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/servers/$serverId': {
+			id: '/servers/$serverId'
+			path: '/servers/$serverId'
+			fullPath: '/servers/$serverId'
+			preLoaderRoute: typeof ServersServerIdRouteRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/servers/$serverId/': {
+			id: '/servers/$serverId/'
+			path: '/'
+			fullPath: '/servers/$serverId/'
+			preLoaderRoute: typeof ServersServerIdIndexRouteImport
+			parentRoute: typeof ServersServerIdRouteRoute
+		}
+		'/servers/$serverId/databases/$databaseId': {
+			id: '/servers/$serverId/databases/$databaseId'
+			path: '/databases/$databaseId'
+			fullPath: '/servers/$serverId/databases/$databaseId'
+			preLoaderRoute: typeof ServersServerIdDatabasesDatabaseIdRouteImport
+			parentRoute: typeof ServersServerIdRouteRoute
+		}
+	}
 }
 
 interface ServersServerIdRouteRouteChildren {
-  ServersServerIdIndexRoute: typeof ServersServerIdIndexRoute
-  ServersServerIdDatabasesDatabaseIdRoute: typeof ServersServerIdDatabasesDatabaseIdRoute
+	ServersServerIdIndexRoute: typeof ServersServerIdIndexRoute
+	ServersServerIdDatabasesDatabaseIdRoute: typeof ServersServerIdDatabasesDatabaseIdRoute
 }
 
 const ServersServerIdRouteRouteChildren: ServersServerIdRouteRouteChildren = {
-  ServersServerIdIndexRoute: ServersServerIdIndexRoute,
-  ServersServerIdDatabasesDatabaseIdRoute:
-    ServersServerIdDatabasesDatabaseIdRoute,
+	ServersServerIdIndexRoute: ServersServerIdIndexRoute,
+	ServersServerIdDatabasesDatabaseIdRoute: ServersServerIdDatabasesDatabaseIdRoute,
 }
 
-const ServersServerIdRouteRouteWithChildren =
-  ServersServerIdRouteRoute._addFileChildren(ServersServerIdRouteRouteChildren)
+const ServersServerIdRouteRouteWithChildren = ServersServerIdRouteRoute._addFileChildren(
+	ServersServerIdRouteRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  SplatRoute: SplatRoute,
-  ServersServerIdRouteRoute: ServersServerIdRouteRouteWithChildren,
+	IndexRoute: IndexRoute,
+	SplatRoute: SplatRoute,
+	ServersServerIdRouteRoute: ServersServerIdRouteRouteWithChildren,
 }
-export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
 import type { createStart } from '@tanstack/react-start'
+import type { getRouter } from './router.tsx'
 declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
+	interface Register {
+		ssr: true
+		router: Awaited<ReturnType<typeof getRouter>>
+	}
 }

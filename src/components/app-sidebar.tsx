@@ -77,10 +77,14 @@ function WorkspacesList() {
 				{serverInfo?.workspaces.map((workspace) => (
 					<SidebarMenuItem key={workspace.name} value={workspace.name}>
 						<SidebarMenuButton>
-							<Link to="/servers/$serverId/databases/$databaseId" params={{ serverId, databaseId: workspace.name }} className="w-full">
+							<Link
+								to="/servers/$serverId/databases/$databaseId"
+								params={{ serverId, databaseId: workspace.name }}
+								className="w-full"
+							>
 								<span className="flex items-center gap-2">
 									<HugeiconsIcon icon={DatabaseIcon} className="size-4" />
-									<span className='text-md'>{workspace.name}</span>
+									<span className="text-md">{workspace.name}</span>
 								</span>
 							</Link>
 						</SidebarMenuButton>
