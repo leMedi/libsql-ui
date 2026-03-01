@@ -1,9 +1,10 @@
 import { useAddDatabaseServerDialog } from '@/components/add-database-server-dialog-context'
 import { databaseServersQueryOptions } from '@/queries/database-server'
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 export const Route = createFileRoute('/')({
-	beforeLoad: async ({ context }) => {
+	loader: async ({ context }) => {
 		const queryClient = context.queryClient
 		const data = await queryClient.ensureQueryData(databaseServersQueryOptions())
 
@@ -17,9 +18,19 @@ export const Route = createFileRoute('/')({
 })
 
 function Homepage() {
-	const { openDialog } = useAddDatabaseServerDialog()
+	const data = Route.useLoaderData()
 
-	openDialog()
+	const { openDialog, closeDialog } = useAddDatabaseServerDialog()
+
+	useEffect(() => {
+		if (data.databaseServers.length === 0) {
+			openDialog()
+		} else {
+			closeDialog()
+		}
+	}, [data, openDialog, closeDialog])
+
+	// openDialog()
 	return (
 		<div className="flex h-[calc(100vh-3rem)] items-center justify-center">
 			<div className="text-muted-foreground">No database servers configured</div>
