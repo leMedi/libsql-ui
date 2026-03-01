@@ -1,4 +1,4 @@
-import { type ResultSet, createClient } from '@libsql/client'
+import { type ResultSet, createClient } from '@libsql/client/web'
 import { createServerFn } from '@tanstack/react-start'
 import z from 'zod'
 import { generateNormalAuthHeaders } from '../sqld-api'
