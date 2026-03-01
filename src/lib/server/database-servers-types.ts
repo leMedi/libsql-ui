@@ -33,7 +33,9 @@ export type DatabaseServerAdminAuth = z.infer<typeof zDatabaseServerAdminAuth>
 export type DatabaseServerNormalAuth = z.infer<typeof zDatabaseServerNormalAuth>
 
 // Public type without sensitive auth data (safe to return to frontend)
-export type DatabaseServerPublic = Omit<DatabaseServer, 'adminAuth' | 'normalAuth'>
+export type DatabaseServerPublic = Omit<DatabaseServer, 'adminAuth' | 'normalAuth'> & {
+	normalAuthType: DatabaseServerNormalAuth['type']
+}
 
 export const zAddDatabaseServer = zDatabaseServer
 	.omit({

@@ -1,7 +1,7 @@
 import { genId } from '@/lib/utils'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { fetchWorkspacesList, generateNormalAuthHeaders } from '../sqld-api'
+import { fetchWorkspacesList, generateNormalAuthHeaders, signJwtToken } from '../sqld-api'
 import {
 	type DatabaseServer,
 	type DatabaseServerAdminAuth,
@@ -37,8 +37,11 @@ const normalAuthInputsToDbAuth = (auth: {
 
 // Helper to strip sensitive auth data before sending to frontend
 const sanitizeServerForPublic = (server: DatabaseServer): DatabaseServerPublic => {
-	const { adminAuth: _, normalAuth: __, ...publicServer } = server
-	return publicServer
+	const { adminAuth: _, normalAuth, ...publicServer } = server
+	return {
+		...publicServer,
+		normalAuthType: normalAuth.type,
+	}
 }
 
 export const getDatabaseServersFn = createServerFn({ method: 'GET' }).handler(async () => {
@@ -218,4 +221,35 @@ export const createWorkspaceFn = createServerFn({ method: 'POST' })
 			}
 			throw new Error('Failed to create workspace on server')
 		}
+	})
+
+const zCreateScopedJwtToken = z.object({
+	serverId: z.string(),
+	namespace: z.string().min(1),
+	permission: z.enum(['ro', 'rw']),
+	expiresInSec: z.number().int().positive().nullable(),
+})
+
+export const createScopedJwtTokenFn = createServerFn({ method: 'POST' })
+	.inputValidator(zCreateScopedJwtToken)
+	.handler(async ({ data }): Promise<{ token: string }> => {
+		const { DatabaseServersStorage } = await import('@/lib/storage')
+		const servers = await DatabaseServersStorage.all()
+		const server = servers.find((s) => s.id === data.serverId)
+
+		if (!server) {
+			throw new Error('Database server not found')
+		}
+
+		if (server.normalAuth.type !== 'jwt') {
+			throw new Error('Normal authentication is not configured for JWT')
+		}
+
+		const token = await signJwtToken(server.normalAuth.privateKey, {
+			permission: data.permission,
+			namespace: data.namespace,
+			expiresInSec: data.expiresInSec,
+		})
+
+		return { token }
 	})

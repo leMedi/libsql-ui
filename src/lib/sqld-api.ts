@@ -3,11 +3,34 @@ import { SignJWT, importPKCS8 } from 'jose'
 import type { DatabaseServer, DatabaseServerNormalAuth } from './server/database-servers-types'
 
 const JWT_ALG = 'EdDSA'
-const JWT_EXPIRATION = '1h'
+const DEFAULT_JWT_EXPIRATION_SEC = 60 * 60
 
-const signJwtToken = async (privateKey: string) => {
+type SignJwtTokenOptions = {
+	permission?: 'ro' | 'rw'
+	namespace?: string
+	expiresInSec?: number | null
+}
+
+export const signJwtToken = async (privateKey: string, options: SignJwtTokenOptions = {}) => {
 	const key = await importPKCS8(privateKey, JWT_ALG)
-	return new SignJWT({}).setProtectedHeader({ alg: JWT_ALG }).setIssuedAt().setExpirationTime(JWT_EXPIRATION).sign(key)
+	const now = Math.floor(Date.now() / 1000)
+
+	const claims =
+		typeof options.permission === 'string' && typeof options.namespace === 'string'
+			? {
+					a: options.permission,
+					id: options.namespace,
+				}
+			: {}
+
+	let token = new SignJWT(claims).setProtectedHeader({ alg: JWT_ALG }).setIssuedAt(now)
+
+	const expiresInSec = options.expiresInSec === undefined ? DEFAULT_JWT_EXPIRATION_SEC : options.expiresInSec
+	if (typeof expiresInSec === 'number') {
+		token = token.setExpirationTime(now + expiresInSec)
+	}
+
+	return token.sign(key)
 }
 
 export const generateNormalAuthHeaders = async (auth: DatabaseServerNormalAuth): Promise<Record<string, string>> => {
@@ -18,7 +41,6 @@ export const generateNormalAuthHeaders = async (auth: DatabaseServerNormalAuth):
 	}
 
 	const jwt = await signJwtToken(auth.privateKey)
-	console.log('Generated JWT for normal auth:', jwt)
 	return {
 		Authorization: `Bearer ${jwt}`,
 	}
