@@ -6,10 +6,8 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 export const Route = createFileRoute('/servers/$serverId')({
 	loader: async ({ params, context }) => {
 		try {
-			const data = await context.queryClient.ensureQueryData(
-				databaseServerInfoQueryOptions(params.serverId),
-			)
-			return data;
+			const data = await context.queryClient.ensureQueryData(databaseServerInfoQueryOptions(params.serverId))
+			return data
 		} catch {
 			throw redirect({ to: '/' })
 		}

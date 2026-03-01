@@ -6,6 +6,7 @@ import {
 	type DatabaseServer,
 	type DatabaseServerAdminAuth,
 	type DatabaseServerNormalAuth,
+	type DatabaseServerPublic,
 	type ServerInfo,
 	zAddDatabaseServer,
 	zCreateWorkspace,
@@ -34,10 +35,16 @@ const normalAuthInputsToDbAuth = (auth: {
 	return { type: 'jwt', privateKey: auth.privateKey || '' }
 }
 
+// Helper to strip sensitive auth data before sending to frontend
+const sanitizeServerForPublic = (server: DatabaseServer): DatabaseServerPublic => {
+	const { adminAuth: _, normalAuth: __, ...publicServer } = server
+	return publicServer
+}
+
 export const getDatabaseServersFn = createServerFn({ method: 'GET' }).handler(async () => {
 	const { DatabaseServersStorage } = await import('@/lib/storage')
 	const servers = await DatabaseServersStorage.all()
-	return servers ?? []
+	return (servers ?? []).map(sanitizeServerForPublic)
 })
 
 export const getDatabaseServerConnectionInfoFromStorageFn = createServerFn({
@@ -51,7 +58,7 @@ export const getDatabaseServerConnectionInfoFromStorageFn = createServerFn({
 		if (!server) {
 			throw new Error('Database server not found')
 		}
-		return server
+		return sanitizeServerForPublic(server)
 	})
 
 export const addDatabaseServerFn = createServerFn({ method: 'POST' })
@@ -89,7 +96,7 @@ export const addDatabaseServerFn = createServerFn({ method: 'POST' })
 		servers.push(newServer)
 		await DatabaseServersStorage.add(newServer)
 
-		return newServer
+		return sanitizeServerForPublic(newServer)
 	})
 
 export const testDatabaseServerConnectionFn = createServerFn({ method: 'POST' })
@@ -151,10 +158,10 @@ const getSeverInfoCached = async (serverId: string): Promise<ServerInfo> => {
 	}
 
 	try {
-		if (_SERVER_INFO_CACHE[serverId]) {
-			// TODO: check date is less than 15min old
-			return _SERVER_INFO_CACHE[serverId].data
-		}
+		// if (_SERVER_INFO_CACHE[serverId]) {
+		// 	// TODO: check date is less than 15min old
+		// 	return _SERVER_INFO_CACHE[serverId].data
+		// }
 
 		const workspaces = await fetchWorkspacesList(server)
 

@@ -26,15 +26,13 @@ function RouteComponent() {
 		)
 	}
 
-	const database = server.workspaces.find(w => w.name === databaseId)
+	const database = server.workspaces.find((w) => w.name === databaseId)
 	if (!database) {
 		return (
 			<div className="container mx-auto py-8 px-8">
 				<div className="">
 					<h1 className="text-3xl font-bold">Database not found</h1>
-					<p className="text-muted-foreground">
-						The database "{databaseId}" was not found on server.
-					</p>
+					<p className="text-muted-foreground">The database "{databaseId}" was not found on server.</p>
 				</div>
 			</div>
 		)
@@ -43,9 +41,9 @@ function RouteComponent() {
 	return (
 		<div className="container mx-auto py-8 px-8">
 			<div className="space-y-3">
-				<h1 className="text-3xl font-bold">
-					{databaseId}
-				</h1>
+				<div className='mb-4'>
+					<h1 className="text-3xl font-bold pl-5">Database: {databaseId}</h1>
+				</div>
 				<LibSQLStudioEmbed serverId={serverId} workspace={database} />
 			</div>
 		</div>

@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/servers/$serverId/')({
-  component: RouteComponent,
+	component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { serverId } = Route.useParams()
-  return <div>Server {serverId} - Standalone Page</div>
+	const { serverId } = Route.useParams()
+	return <div>Server {serverId} - Standalone Page</div>
 }
