@@ -30,7 +30,6 @@ function Homepage() {
 		}
 	}, [data, openDialog, closeDialog])
 
-	// openDialog()
 	return (
 		<div className="flex h-[calc(100vh-3rem)] items-center justify-center">
 			<div className="text-muted-foreground">No database servers configured</div>
